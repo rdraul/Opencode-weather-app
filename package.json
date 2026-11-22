@@ -4,7 +4,11 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "typecheck": "bun check"
+    "start": "bun run index.ts",
+    "dev": "bun run index.ts --watch",
+    "typecheck": "bun check",
+    "test": "bun test",
+    "build": "bun build --compile --target=bun-windows-x64 index.ts --outfile=dist/weather.exe"
   },
   "devDependencies": {
     "@types/bun": "latest"
