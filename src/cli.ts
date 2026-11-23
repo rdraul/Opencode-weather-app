@@ -2,8 +2,8 @@ import { stdin, stdout } from "node:process";
 import { createInterface } from "node:readline";
 import { cyan, green, red, yellow } from "./color";
 import { errorMessage } from "./errors";
-import { cityLabel, formatTemperature, unitLabel } from "./format";
-import { geocode, getCurrentWeather } from "./openmeteo";
+import { cityLabel, formatForecastDay, formatTemperature, unitLabel } from "./format";
+import { geocode, getCurrentWeather, getSevenDayForecast } from "./openmeteo";
 import { addCity, loadConfig, removeCity, saveConfig, setDefaultCity, toggleUnit } from "./store";
 import type { City, Config } from "./types";
 
@@ -64,6 +64,7 @@ function renderMenu(config: Config): string {
     "  3. Buscar y agregar ciudad",
     "  4. Eliminar ciudad",
     "  5. Establecer ciudad default",
+    "  6. Pronóstico 7 días",
     `  8. Ajustes (${unitLabel(config.unit)})`,
     "  9. Salir",
     LINE,
@@ -126,6 +127,22 @@ async function showAll(config: Config): Promise<void> {
   }
   for (const city of config.cities) {
     await printWeather(city, config);
+  }
+}
+
+async function showForecastFlow(reader: LineReader, config: Config): Promise<void> {
+  const chosen = await chooseCity(reader, config);
+  if (!chosen) return;
+  try {
+    const days = await getSevenDayForecast(chosen, config.unit);
+    console.log(`  Pronóstico 7 días — ${cityLabel(chosen)}`);
+    for (const day of days) {
+      console.log(`  ${formatForecastDay(day, config.unit)}`);
+    }
+  } catch (error) {
+    console.log(
+      `  ${red(`No pude obtener el pronóstico de ${chosen.name}: ${errorMessage(error)}`)}`,
+    );
   }
 }
 
@@ -196,6 +213,9 @@ export async function runCli(): Promise<void> {
           break;
         case "5":
           config = await setDefaultFlow(reader, config);
+          break;
+        case "6":
+          await showForecastFlow(reader, config);
           break;
         case "8":
           config = await toggleUnitFlow(config);
