@@ -47,3 +47,14 @@ Esta es la apariencia que deseamos crear
 ════════════════════════════════════════
   Selecciona una opción: 5
 ```
+
+## Publicar una versión
+
+El workflow `.github/workflows/release.yml` crea el tag `vX.Y.Z` y un release con el binario `dist/weather.exe` adjunto.
+
+Para publicar:
+
+1. Actualiza `"version"` en `package.json` (por ejemplo, `"1.0.0"`).
+2. Haz push a `main` (o ejecuta el workflow manualmente desde *Actions*).
+
+Si el tag ya existe, el workflow omite el release para evitar duplicados.
