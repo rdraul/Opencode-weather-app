@@ -1,13 +1,13 @@
 import { mkdir, rename } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { errorMessage } from "./errors";
-import type { City, Config } from "./types";
-
-const CONFIG_FILE = "config.json";
+import { CONFIG_DIR_NAME, CONFIG_FILE } from "../utils/constantes";
+import { errorMessage } from "../utils/errors";
+import type { City } from "../tipos/City";
+import type { Config } from "../tipos/Config";
 
 function configDir(): string {
-  return process.env.WEATHER_CONFIG_DIR ?? join(homedir(), ".weather-cli");
+  return process.env.WEATHER_CONFIG_DIR ?? join(homedir(), CONFIG_DIR_NAME);
 }
 
 function configPath(): string {
@@ -75,24 +75,6 @@ export async function saveConfig(config: Config): Promise<void> {
   await mkdir(dir, { recursive: true });
   await Bun.write(temp, `${JSON.stringify(config, null, 2)}\n`);
   await rename(temp, join(dir, CONFIG_FILE));
-}
-
-export function addCity(config: Config, city: City): Config {
-  if (config.cities.some((saved) => saved.id === city.id)) return config;
-  return { ...config, cities: [...config.cities, city] };
-}
-
-export function removeCity(config: Config, id: number): Config {
-  return {
-    ...config,
-    cities: config.cities.filter((city) => city.id !== id),
-    defaultCityId: config.defaultCityId === id ? null : config.defaultCityId,
-  };
-}
-
-export function setDefaultCity(config: Config, id: number): Config {
-  if (!config.cities.some((city) => city.id === id)) return config;
-  return { ...config, defaultCityId: id };
 }
 
 export function toggleUnit(config: Config): Config {

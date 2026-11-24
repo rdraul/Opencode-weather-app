@@ -1,6 +1,6 @@
-import { runCli } from "./src/cli";
-import { red } from "./src/color";
-import { errorMessage } from "./src/errors";
+import { runCli } from "./src/index";
+import { red } from "./src/utils/colours";
+import { errorMessage } from "./src/utils/errors";
 
 runCli().catch((error: unknown) => {
   console.error(`${red("Error fatal:")} ${errorMessage(error)}`);

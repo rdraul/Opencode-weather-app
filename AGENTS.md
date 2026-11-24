@@ -1,6 +1,6 @@
 # AGENTS.md
 
-- Bun-only project (`bun init` scaffold). Use `bun` / `bunx`, not npm/npx; `bun.lock` is the lockfile. `index.ts` boots the CLI; logic lives in `src/` (`cli`, `openmeteo`, `store`, `format`, `types`, `errors`), tests in `tests/`.
+- Bun-only project (`bun init` scaffold). Use `bun` / `bunx`, not npm/npx; `bun.lock` is the lockfile. `index.ts` boots the CLI; `src/index.ts` orquesta el loop y la lógica vive en `src/` (`action`, `presentation`, `Storage`, `tipos`, `api`, `utils`), tests en `tests/`.
 - Commands: `bun run start`, `bun run typecheck` (`bun check`), `bun test`, `bun run build` (`bun-windows-x64` → `dist/weather.exe`). No lint or format scripts.
 - `bun check` prints its success message to stderr; in PowerShell a piped run can surface `NativeCommandError` even when it passes. Judge by the output/exit code.
 - `tsconfig.json` uses Bun's bundler defaults with strict flags, including `noUncheckedIndexedAccess` and `verbatimModuleSyntax`, plus `noEmit` (no compiled JS in the repo).

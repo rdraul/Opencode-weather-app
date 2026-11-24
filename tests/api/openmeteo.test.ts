@@ -1,5 +1,6 @@
 import { afterEach, expect, test } from "bun:test";
-import { geocode, getCurrentWeather, getSevenDayForecast } from "../src/openmeteo";
+import { geocode } from "../../src/api/geocoding";
+import { getCurrentWeather, getSevenDayForecast } from "../../src/api/weather";
 
 const originalFetch = globalThis.fetch;
 
@@ -116,6 +117,74 @@ test("getSevenDayForecast falla si un valor diario no es válido", async () => {
       time: Array.from({ length: 7 }, (_, index) => `2026-11-${23 + index}`),
       temperature_2m_max: [10, 11, 12, 13, 14, 15, "n/a"],
       temperature_2m_min: [2, 3, 4, 5, 6, 7, 8],
+      weather_code: [0, 1, 2, 3, 61, 95, 0],
+    },
+  });
+  await expect(getSevenDayForecast(OTTAWA, "celsius")).rejects.toThrow(
+    "No recibí el pronóstico",
+  );
+});
+
+test("geocode rechaza resultados con campos mal formados", async () => {
+  stubJson({ results: [{ id: "1", name: "Ottawa", latitude: 1, longitude: 2 }] });
+  await expect(geocode("Ottawa")).rejects.toThrow('No encontré la ciudad "Ottawa".');
+});
+
+test("geocode conserva country y admin1 cuando llegan como texto", async () => {
+  stubJson({
+    results: [
+      {
+        id: 7,
+        name: "Ottawa",
+        latitude: 45.4,
+        longitude: -75.7,
+        country: 123,
+        admin1: "Ontario",
+      },
+    ],
+  });
+  const city = await geocode("Ottawa");
+  expect(city.country).toBeUndefined();
+  expect(city.admin1).toBe("Ontario");
+});
+
+test("getCurrentWeather usa las coordenadas y permite time nulo", async () => {
+  let requested: URL | undefined;
+  stubJson({ current: { temperature_2m: -3.5 } }, (url) => {
+    requested = url;
+  });
+  const weather = await getCurrentWeather(OTTAWA, "celsius");
+  expect(weather).toEqual({ temperature: -3.5, time: null });
+  expect(requested?.searchParams.get("latitude")).toBe("45.41117");
+  expect(requested?.searchParams.get("longitude")).toBe("-75.69812");
+});
+
+test("getCurrentWeather rechaza una temperatura no numérica", async () => {
+  stubJson({ current: { temperature_2m: "12" } });
+  await expect(getCurrentWeather(OTTAWA, "celsius")).rejects.toThrow(
+    "No recibí la temperatura de Ottawa.",
+  );
+});
+
+test("getSevenDayForecast rechaza fechas con formato inválido", async () => {
+  stubJson({
+    daily: {
+      time: Array.from({ length: 7 }, (_, index) => `23/11/2026-${index}`),
+      temperature_2m_max: [10, 11, 12, 13, 14, 15, 16],
+      temperature_2m_min: [2, 3, 4, 5, 6, 7, 8],
+      weather_code: [0, 1, 2, 3, 61, 95, 0],
+    },
+  });
+  await expect(getSevenDayForecast(OTTAWA, "celsius")).rejects.toThrow(
+    "No recibí el pronóstico",
+  );
+});
+
+test("getSevenDayForecast rechaza arreglos diarios incompletos", async () => {
+  stubJson({
+    daily: {
+      time: Array.from({ length: 7 }, (_, index) => `2026-11-${23 + index}`),
+      temperature_2m_max: [10, 11, 12, 13, 14, 15, 16],
       weather_code: [0, 1, 2, 3, 61, 95, 0],
     },
   });

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, test } from "bun:test";
-import { cyan, green, paint, red, yellow } from "../src/color";
+import { cyan, green, paint, red, yellow } from "../../src/utils/colours";
 
 const originalNoColor = process.env.NO_COLOR;
 const originalForceColor = process.env.FORCE_COLOR;

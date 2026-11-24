@@ -8,7 +8,9 @@
     "dev": "bun run index.ts --watch",
     "typecheck": "bun check",
     "test": "bun test",
-    "build": "bun build --compile --target=bun-windows-x64 index.ts --outfile=dist/weather.exe"
+    "test:coverage": "bun test --coverage",
+    "verify": "bun run typecheck && bun test",
+    "build": "bun run verify && bun build --compile --target=bun-windows-x64 index.ts --outfile=dist/weather.exe"
   },
   "devDependencies": {
     "@types/bun": "latest"

@@ -1,17 +1,15 @@
 import { afterEach, beforeEach, expect, test } from "bun:test";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { addCity, getDefaultCity, removeCity, setDefaultCity } from "../../src/Storage/CityStorage";
 import {
-  addCity,
   defaultConfig,
   loadConfig,
-  removeCity,
   saveConfig,
-  setDefaultCity,
   toggleUnit,
-} from "../src/store";
-import type { City } from "../src/types";
+} from "../../src/Storage/settingsStorage";
+import type { City } from "../../src/tipos/City";
 
 const originalDir = process.env.WEATHER_CONFIG_DIR;
 let dir: string;
@@ -68,4 +66,43 @@ test("setDefaultCity ignora ids que no están guardados", () => {
 test("toggleUnit alterna entre celsius y fahrenheit", () => {
   expect(toggleUnit(defaultConfig()).unit).toBe("fahrenheit");
   expect(toggleUnit({ ...defaultConfig(), unit: "fahrenheit" }).unit).toBe("celsius");
+});
+
+test("getDefaultCity devuelve la ciudad default o undefined", () => {
+  const config = { ...defaultConfig(), cities: [ottawa], defaultCityId: ottawa.id };
+  expect(getDefaultCity(config)).toBe(ottawa);
+  expect(getDefaultCity({ ...config, defaultCityId: 99 })).toBeUndefined();
+  expect(getDefaultCity(defaultConfig())).toBeUndefined();
+});
+
+test("loadConfig sanea ciudades, default y unidad inválidos", async () => {
+  await Bun.write(
+    `${dir}/config.json`,
+    JSON.stringify({
+      cities: [ottawa, { id: "x", name: "Inválida" }, { ...ottawa, id: 2 }],
+      defaultCityId: 99,
+      unit: "kelvin",
+    }),
+  );
+  expect(await loadConfig()).toEqual({
+    cities: [ottawa, { ...ottawa, id: 2 }],
+    defaultCityId: null,
+    unit: "celsius",
+  });
+});
+
+test("loadConfig rechaza JSON corrupto y estructuras inválidas", async () => {
+  await Bun.write(`${dir}/config.json`, "{ esto no es json");
+  await expect(loadConfig()).rejects.toThrow("No se pudo interpretar la configuración");
+
+  await Bun.write(`${dir}/config.json`, "[]");
+  await expect(loadConfig()).rejects.toThrow("No se pudo interpretar la configuración");
+});
+
+test("saveConfig escribe de forma atómica sin dejar temporales", async () => {
+  const config = { ...defaultConfig(), cities: [ottawa], defaultCityId: ottawa.id };
+  await saveConfig(config);
+  const files = await readdir(dir);
+  expect(files).toEqual(["config.json"]);
+  expect(await loadConfig()).toEqual(config);
 });

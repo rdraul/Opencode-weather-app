@@ -1,6 +1,6 @@
-import { yellow } from "./color";
-import type { ForecastDay } from "./openmeteo";
-import type { Unit } from "./types";
+import { yellow } from "./colours";
+import type { Unit } from "../tipos/City";
+import type { ForecastDay } from "../tipos/Weather";
 
 const WEEKDAYS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"] as const;
 

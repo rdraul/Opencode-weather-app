@@ -8,9 +8,3 @@ export interface City {
   country?: string;
   admin1?: string;
 }
-
-export interface Config {
-  cities: City[];
-  defaultCityId: number | null;
-  unit: Unit;
-}
